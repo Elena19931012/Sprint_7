@@ -1,38 +1,46 @@
 package utils;
 
+import com.github.javafaker.Faker;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Random;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class RandomGenerator {
-    private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    private static final Random random = new Random();
-
+    private static final Faker faker = new Faker(new Locale("ru"));
+    
     public static String generateRandomString(int length) {
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(CHARACTERS.charAt(random.nextInt(CHARACTERS.length())));
-        }
-        return sb.toString();
+        return faker.regexify("[A-Za-z0-9]{" + length + "}");
     }
 
     public static String generateRandomPhone() {
-        return "+7" + generateRandomNumbers(10);
+        return "+7" + faker.numerify("##########");
     }
 
     public static String generateRandomNumbers(int length) {
-        StringBuilder sb = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            sb.append(random.nextInt(10));
-        }
-        return sb.toString();
+        return faker.numerify("#".repeat(length));
     }
 
     public static String generateFutureDate(int daysToAdd) {
-        return LocalDate.now().plusDays(daysToAdd).format(DateTimeFormatter.ISO_LOCAL_DATE);
+        return LocalDate.now()
+                .plusDays(daysToAdd)
+                .format(DateTimeFormatter.ISO_LOCAL_DATE);
     }
 
     public static int generateRandomInt(int min, int max) {
-        return min + random.nextInt(max - min + 1);
+        return faker.number().numberBetween(min, max);
+    }
+    
+    public static String generateName() {
+        return faker.name().fullName();
+    }
+    
+    public static String generateEmail() {
+        return faker.internet().emailAddress();
+    }
+    
+    public static String generateAddress() {
+        return faker.address().fullAddress();
     }
 }

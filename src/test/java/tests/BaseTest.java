@@ -17,7 +17,7 @@ public abstract class BaseTest {
         RestAssured.baseURI = ApiConfig.BASE_URL;
         AllureConfig.configAllure();
         
-        // Настраиваем фильтры для логирования и отчетности
+        // Настройка фильтров для логирования запросов и ответов
         RestAssured.filters(
             new AllureRestAssured(), 
             new RequestLoggingFilter(),

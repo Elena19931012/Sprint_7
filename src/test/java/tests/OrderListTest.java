@@ -7,11 +7,13 @@ import io.qameta.allure.Feature;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
 import models.Order;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import utils.OrderGenerator;
 
 import static org.hamcrest.Matchers.*;
+import static org.apache.http.HttpStatus.*;
 
 @Epic("Заказы")
 @Feature("Получение списка заказов")
@@ -25,7 +27,7 @@ public class OrderListTest extends BaseTest {
     public void setUp() {
         Order order = OrderGenerator.getBaseOrder();
         trackNumber = orderClient.createOrder(order)
-                .statusCode(201)
+                .statusCode(SC_CREATED)
                 .extract().path("track");
     }
     
@@ -34,7 +36,7 @@ public class OrderListTest extends BaseTest {
     @Description("Проверка, что эндпоинт списка заказов возвращает список заказов")
     public void getOrderListShouldReturnOrders() {
         orderClient.getOrderList()
-                .statusCode(200)
+                .statusCode(SC_OK)
                 .body("orders", not(emptyArray()))
                 .body("orders", hasSize(greaterThan(0)))
                 .body("orders[0]", hasKey("id"))
@@ -51,10 +53,20 @@ public class OrderListTest extends BaseTest {
                 .body("pageInfo", hasKey("total"))
                 .body("pageInfo", hasKey("limit"))
                 .body("availableStations", not(emptyArray()));
-                
-        try {
-            orderClient.cancelOrder(trackNumber);
-        } catch (Exception ignored) {
+    }
+
+    @After
+    @Step("Отмена созданного заказа")
+    public void cleanUp() {
+        if (trackNumber != 0) {
+            try {
+                orderClient.cancelOrder(trackNumber)
+                    .statusCode(anyOf(is(SC_OK), is(SC_ACCEPTED)))
+                    .log().ifValidationFails();
+                System.out.println("Заказ с номером " + trackNumber + " успешно отменен");
+            } catch (Exception e) {
+                System.out.println("Ошибка при отмене заказа с номером " + trackNumber + ": " + e.getMessage());
+            }
         }
     }
 }

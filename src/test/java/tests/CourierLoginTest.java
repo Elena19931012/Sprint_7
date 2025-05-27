@@ -6,13 +6,14 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
-import models.CourierCreate;
+import models.CourierModel;
 import models.CourierCredentials;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import utils.CourierGenerator;
 
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.Matchers.*;
 
 @Epic("Курьеры")
@@ -20,21 +21,44 @@ import static org.hamcrest.Matchers.*;
 public class CourierLoginTest extends BaseTest {
 
     private final CourierClient courierClient = new CourierClient();
-    private CourierCreate courier;
+    private CourierModel courier; 
     private int courierId;
 
     @Before
     @Step("Создание тестового курьера для проверки авторизации")
     public void setUp() {
         courier = CourierGenerator.getRandomCourier();
-        courierClient.createCourier(courier);
+        courierClient.createCourier(courier); 
+        try {
+            CourierCredentials credentials = new CourierCredentials(courier.getLogin(), courier.getPassword());
+            this.courierId = courierClient.loginCourier(credentials).extract().path("id");
+        } catch (Exception e) {
+            System.out.println("Не удалось получить ID курьера в setUp: " + e.getMessage());
+        }
     }
 
     @After
     @Step("Удаление тестовых данных")
     public void tearDown() {
+        if (courierId == 0 && courier != null && courier.getLogin() != null && courier.getPassword() != null) {
+            try {
+                CourierCredentials credentials = new CourierCredentials(courier.getLogin(), courier.getPassword());
+                courierId = courierClient.loginCourier(credentials)
+                        .extract().path("id");
+                System.out.println("Получен ID курьера для очистки в tearDown: " + courierId);
+            } catch (Exception e) {
+                System.out.println("Не удалось получить ID курьера для очистки в tearDown: " + e.getMessage());
+            }
+        }
+        
         if (courierId != 0) {
-            courierClient.deleteCourier(courierId);
+            try {
+                courierClient.deleteCourier(courierId)
+                    .statusCode(anyOf(is(SC_OK), is(SC_ACCEPTED)));
+                System.out.println("Курьер с ID " + courierId + " успешно удален");
+            } catch (Exception e) {
+                System.out.println("Ошибка при удалении курьера с ID " + courierId + ": " + e.getMessage());
+            }
         }
     }
 
@@ -42,12 +66,16 @@ public class CourierLoginTest extends BaseTest {
     @DisplayName("Авторизация с валидными данными")
     @Description("Проверка, что курьер может авторизоваться с валидными данными и получает ID")
     public void loginWithValidCredentials() {
-        CourierCredentials credentials = courier.toCredentials();
+        CourierCredentials credentials = new CourierCredentials(courier.getLogin(), courier.getPassword());
         
-        courierId = courierClient.loginCourier(credentials)
-                .statusCode(200)
+        int responseId = courierClient.loginCourier(credentials)
+                .statusCode(SC_OK)
                 .body("$", hasKey("id"))
                 .extract().path("id");
+        
+        if (this.courierId == 0) {
+            this.courierId = responseId;
+        }
     }
 
     @Test
@@ -57,10 +85,8 @@ public class CourierLoginTest extends BaseTest {
         CourierCredentials credentials = new CourierCredentials(null, courier.getPassword());
         
         courierClient.loginCourier(credentials)
-                .statusCode(400)
+                .statusCode(SC_BAD_REQUEST)
                 .body("message", is("Недостаточно данных для входа"));
-        
-        courierId = courierClient.loginCourier(courier.toCredentials()).extract().path("id");
     }
 
     @Test
@@ -70,35 +96,29 @@ public class CourierLoginTest extends BaseTest {
         CourierCredentials credentials = new CourierCredentials(courier.getLogin(), null);
         
         courierClient.loginCourier(credentials)
-                .statusCode(400)
+                .statusCode(SC_BAD_REQUEST)
                 .body("message", is("Недостаточно данных для входа"));
-        
-        courierId = courierClient.loginCourier(courier.toCredentials()).extract().path("id");
     }
 
     @Test
     @DisplayName("Авторизация с неверным паролем")
     @Description("Проверка, что авторизация с неверным паролем возвращает ошибку 404")
     public void loginWithWrongPasswordShouldReturnError() {
-        CourierCredentials credentials = new CourierCredentials(courier.getLogin(), "неверныйПароль");
+        CourierCredentials credentials = new CourierCredentials(courier.getLogin(), "неверныйПароль123");
         
         courierClient.loginCourier(credentials)
-                .statusCode(404)
+                .statusCode(SC_NOT_FOUND)
                 .body("message", is("Учетная запись не найдена"));
-        
-        courierId = courierClient.loginCourier(courier.toCredentials()).extract().path("id");
     }
 
     @Test
     @DisplayName("Авторизация с несуществующим курьером")
     @Description("Проверка, что авторизация с несуществующим курьером возвращает ошибку 404")
     public void loginWithNonExistentCourierShouldReturnError() {
-        CourierCredentials credentials = new CourierCredentials("несуществующийЛогин", "любойПароль");
+        CourierCredentials credentials = new CourierCredentials("несуществующийЛогин123", "любойПароль123");
         
         courierClient.loginCourier(credentials)
-                .statusCode(404)
+                .statusCode(SC_NOT_FOUND)
                 .body("message", is("Учетная запись не найдена"));
-        
-        courierId = courierClient.loginCourier(courier.toCredentials()).extract().path("id");
     }
 }

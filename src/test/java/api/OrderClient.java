@@ -3,6 +3,7 @@ package api;
 import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
 import models.Order;
+import models.OrderCancelRequest;
 
 import static io.restassured.RestAssured.given;
 import static config.ApiConfig.*;
@@ -38,11 +39,15 @@ public class OrderClient {
     
     @Step("Отмена заказа")
     public ValidatableResponse cancelOrder(int trackNumber) {
+        OrderCancelRequest cancelRequest = new OrderCancelRequest(trackNumber);
+    
         return given()
+                .log().all() 
                 .header("Content-type", "application/json")
-                .body("{\"track\": " + trackNumber + "}")
+                .body(cancelRequest) 
                 .when()
                 .put(ORDERS_CANCEL)
-                .then();
+                .then()
+                .log().all(); 
     }
 }

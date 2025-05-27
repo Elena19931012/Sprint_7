@@ -2,19 +2,19 @@ package api;
 
 import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
-import models.CourierCreate;
 import models.CourierCredentials;
+import models.CourierModel;
 
-import static io.restassured.RestAssured.given;
 import static config.ApiConfig.*;
+import static io.restassured.RestAssured.given;
 
 public class CourierClient {
 
     @Step("Создание курьера")
-    public ValidatableResponse createCourier(CourierCreate courier) {
+    public ValidatableResponse createCourier(CourierModel courierModel) { 
         return given()
                 .header("Content-type", "application/json")
-                .body(courier)
+                .body(courierModel) 
                 .when()
                 .post(COURIER_CREATE)
                 .then();
@@ -33,7 +33,6 @@ public class CourierClient {
     @Step("Удаление курьера по id: {courierId}")
     public ValidatableResponse deleteCourier(int courierId) {
         return given()
-                .header("Content-type", "application/json")
                 .when()
                 .delete(COURIER_DELETE.replace("{id}", String.valueOf(courierId)))
                 .then();
