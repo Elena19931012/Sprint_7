@@ -1,5 +1,6 @@
 package api;
 
+import config.ApiClientConfig;
 import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
 import models.CourierCredentials;
@@ -13,7 +14,7 @@ public class CourierClient {
     @Step("Создание курьера")
     public ValidatableResponse createCourier(CourierModel courierModel) { 
         return given()
-                .header("Content-type", "application/json")
+                .spec(ApiClientConfig.getBaseRequestSpec()) 
                 .body(courierModel) 
                 .when()
                 .post(COURIER_CREATE)
@@ -23,7 +24,7 @@ public class CourierClient {
     @Step("Авторизация курьера")
     public ValidatableResponse loginCourier(CourierCredentials credentials) {
         return given()
-                .header("Content-type", "application/json")
+                .spec(ApiClientConfig.getBaseRequestSpec()) 
                 .body(credentials)
                 .when()
                 .post(COURIER_LOGIN)
@@ -33,6 +34,7 @@ public class CourierClient {
     @Step("Удаление курьера по id: {courierId}")
     public ValidatableResponse deleteCourier(int courierId) {
         return given()
+                .spec(ApiClientConfig.getBaseRequestSpec()) 
                 .when()
                 .delete(COURIER_DELETE.replace("{id}", String.valueOf(courierId)))
                 .then();

@@ -18,7 +18,7 @@ import static org.junit.Assert.assertTrue;
 
 @Epic("Курьеры")
 @Feature("Создание курьера")
-public class CourierCreateTest extends BaseTest {
+public class CourierCreateTest {
 
     private final CourierClient courierClient = new CourierClient();
     private CourierModel courier; 

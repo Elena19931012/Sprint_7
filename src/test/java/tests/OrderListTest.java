@@ -17,7 +17,7 @@ import static org.apache.http.HttpStatus.*;
 
 @Epic("Заказы")
 @Feature("Получение списка заказов")
-public class OrderListTest extends BaseTest {
+public class OrderListTest {
 
     private final OrderClient orderClient = new OrderClient();
     private int trackNumber;

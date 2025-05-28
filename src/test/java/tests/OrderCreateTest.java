@@ -24,7 +24,7 @@ import static org.apache.http.HttpStatus.*;
 @Epic("Заказы")
 @Feature("Создание заказа")
 @RunWith(Parameterized.class)
-public class OrderCreateTest extends BaseTest {
+public class OrderCreateTest {
 
     private final OrderClient orderClient = new OrderClient();
     private final Order order;
@@ -50,7 +50,6 @@ public class OrderCreateTest extends BaseTest {
     @Test
     @DisplayName("Создание заказа с разными вариантами цвета")
     @Description("Проверка, что создание заказа работает с разными комбинациями цветов")
-    @Step("Тестирование создания заказа: {0}")
     public void createOrderWithDifferentColors() {
         int trackNumber = orderClient.createOrder(order)
                 .statusCode(SC_CREATED)

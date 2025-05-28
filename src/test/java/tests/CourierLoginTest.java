@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.*;
 
 @Epic("Курьеры")
 @Feature("Авторизация курьера")
-public class CourierLoginTest extends BaseTest {
+public class CourierLoginTest {
 
     private final CourierClient courierClient = new CourierClient();
     private CourierModel courier; 
